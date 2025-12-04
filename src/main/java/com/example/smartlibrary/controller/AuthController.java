@@ -5,6 +5,7 @@ import com.example.smartlibrary.dto.LoginRequest;
 import com.example.smartlibrary.dto.UserProfileDto;
 import com.example.smartlibrary.model.User;
 import com.example.smartlibrary.security.JwtService;
+import com.example.smartlibrary.service.NotificationService;
 import com.example.smartlibrary.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,13 +22,16 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final NotificationService notificationService;
 
     public AuthController(UserService userService,
                           AuthenticationManager authenticationManager,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          NotificationService notificationService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.notificationService = notificationService;
     }
 
     @PostMapping("/register")
@@ -39,6 +43,8 @@ public class AuthController {
             return ResponseEntity.badRequest().body("username already taken");
         }
         User saved = userService.register(user);
+        // invio mail di benvenuto (best-effort, non blocca la risposta)
+        notificationService.sendRegistrationWelcome(saved);
         saved.setPassword(null);
         return ResponseEntity.ok(saved);
     }

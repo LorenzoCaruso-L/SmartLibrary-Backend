@@ -1,6 +1,7 @@
 package com.example.smartlibrary.service.impl;
 
 import com.example.smartlibrary.model.Reservation;
+import com.example.smartlibrary.model.User;
 import com.example.smartlibrary.service.NotificationService;
 import com.example.smartlibrary.service.PdfService;
 import jakarta.mail.internet.MimeMessage;
@@ -45,6 +46,32 @@ public class NotificationServiceImpl implements NotificationService {
             mailSender.send(message);
         } catch (Exception e) {
             log.error("Impossibile inviare la mail di prenotazione", e);
+        }
+    }
+
+    @Override
+    public void sendRegistrationWelcome(User user) {
+        if (user.getEmail() == null) {
+            log.warn("Email non configurata per l'utente {}", user.getUsername());
+            return;
+        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false);
+            helper.setTo(user.getEmail());
+            helper.setSubject("Benvenuto in SmartLibrary");
+            helper.setText("""
+                    Ciao %s,
+
+                    grazie per esserti registrato a SmartLibrary!
+                    Il tuo account è stato creato con successo e ora puoi accedere per esplorare il catalogo e prenotare i tuoi libri.
+
+                    Buona lettura,
+                    Il team di SmartLibrary
+                    """.formatted(user.getUsername()), false);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Impossibile inviare la mail di benvenuto per la registrazione", e);
         }
     }
 }
