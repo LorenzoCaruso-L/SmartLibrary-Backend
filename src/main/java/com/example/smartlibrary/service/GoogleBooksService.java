@@ -110,7 +110,7 @@ public class GoogleBooksService {
             book.setAuthor(author);
             book.setPublicationYear(year);
             book.setGenre(genre);
-            book.setCopiesAvailable(3); // Default: 3 copie disponibili
+            book.setCopiesAvailable(10); // Default: 10 copie disponibili
             book.setDescription(description);
             book.setCoverImageUrl(coverImageUrl);
             

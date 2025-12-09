@@ -36,12 +36,38 @@ public class NotificationServiceImpl implements NotificationService {
             byte[] pdf = pdfService.generateReservationTicket(reservation);
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom("smartlibrary.ingsw@gmail.com", "SmartLibrary");
             helper.setTo(reservation.getUser().getEmail());
-            helper.setSubject("Conferma prenotazione libro");
+            helper.setSubject("Conferma prenotazione - " + reservation.getBook().getTitle());
             helper.setText("""
                     Ciao %s,
-                    la tua prenotazione per "%s" è stata confermata. Troverai in allegato il ticket per il ritiro.
-                    """.formatted(reservation.getUser().getUsername(), reservation.getBook().getTitle()), false);
+                    
+                    grazie per la tua prenotazione!
+                    
+                    Il libro "%s" è stato prenotato con successo.
+                    
+                    🎯 INVITO AL RITIRO:
+                    Ti invitiamo a recarti presso la biblioteca per ritirare il libro prenotato.
+                    Ricorda di portare con te il ticket PDF allegato a questa email.
+                    
+                    📋 Dettagli prenotazione:
+                    - Codice ritiro: %s
+                    - Data prenotazione: %s
+                    - Titolo: %s
+                    - Autore: %s
+                    
+                    Il libro sarà disponibile per il ritiro entro 7 giorni dalla data di prenotazione.
+                    
+                    A presto,
+                    Il team di SmartLibrary
+                    """.formatted(
+                    reservation.getUser().getUsername(),
+                    reservation.getBook().getTitle(),
+                    reservation.getPickupCode(),
+                    reservation.getReservationDate().toString(),
+                    reservation.getBook().getTitle(),
+                    reservation.getBook().getAuthor()
+            ), false);
             helper.addAttachment("ticket-prenotazione.pdf", () -> new ByteArrayInputStream(pdf));
             mailSender.send(message);
         } catch (Exception e) {
@@ -58,6 +84,7 @@ public class NotificationServiceImpl implements NotificationService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false);
+            helper.setFrom("smartlibrary.ingsw@gmail.com", "SmartLibrary");
             helper.setTo(user.getEmail());
             helper.setSubject("Benvenuto in SmartLibrary");
             helper.setText("""
