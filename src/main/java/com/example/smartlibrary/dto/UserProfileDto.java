@@ -5,12 +5,21 @@ public class UserProfileDto {
     private String username;
     private String email;
     private String role;
+    private String profileImageUrl;
 
     public UserProfileDto(Long id, String username, String email, String role) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.role = role;
+    }
+
+    public UserProfileDto(Long id, String username, String email, String role, String profileImageUrl) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.role = role;
+        this.profileImageUrl = profileImageUrl;
     }
 
     public Long getId() {
@@ -43,6 +52,14 @@ public class UserProfileDto {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }
 

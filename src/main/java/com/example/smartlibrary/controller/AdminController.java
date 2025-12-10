@@ -4,6 +4,7 @@ import com.example.smartlibrary.facade.AdminFacade;
 import com.example.smartlibrary.model.Book;
 import com.example.smartlibrary.service.BookService;
 import com.example.smartlibrary.service.GoogleBooksService;
+import com.example.smartlibrary.service.ReviewService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,29 @@ public class AdminController {
     private final AdminFacade adminFacade;
     private final GoogleBooksService googleBooksService;
     private final BookService bookService;
+    private final ReviewService reviewService;
 
     public AdminController(AdminFacade adminFacade, 
                           GoogleBooksService googleBooksService,
-                          BookService bookService) {
+                          BookService bookService,
+                          ReviewService reviewService) {
         this.adminFacade = adminFacade;
         this.googleBooksService = googleBooksService;
         this.bookService = bookService;
+        this.reviewService = reviewService;
+    }
+
+    /**
+     * Ottiene tutti i libri del catalogo (per admin)
+     * GET /admin/books
+     */
+    @GetMapping("/books")
+    public ResponseEntity<?> getAllBooks(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Integer year) {
+        return ResponseEntity.ok(bookService.search(title, author, genre, year));
     }
 
     @PostMapping("/books")
@@ -42,6 +59,21 @@ public class AdminController {
     public ResponseEntity<?> deleteBook(@PathVariable Long id) {
         adminFacade.deleteBook(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Elimina tutti i libri dal database
+     * DELETE /admin/books
+     * ⚠️ ATTENZIONE: Operazione irreversibile!
+     */
+    @DeleteMapping("/books")
+    public ResponseEntity<?> deleteAllBooks() {
+        long countBefore = bookService.search(null, null, null, null).size();
+        bookService.deleteAll();
+        return ResponseEntity.ok(Map.of(
+            "message", "Tutti i libri sono stati eliminati",
+            "deleted", countBefore
+        ));
     }
 
     @GetMapping("/reservations")
@@ -87,17 +119,38 @@ public class AdminController {
     @PostMapping("/books/import")
     public ResponseEntity<?> importBooks(@RequestBody Map<String, Object> request) {
         String query = (String) request.get("query");
-        int maxResults = request.containsKey("maxResults") 
-            ? ((Number) request.get("maxResults")).intValue() 
-            : 10;
+        int maxResults = 10; // Default
+        if (request.containsKey("maxResults")) {
+            Object maxResultsObj = request.get("maxResults");
+            if (maxResultsObj instanceof Number) {
+                maxResults = ((Number) maxResultsObj).intValue();
+            } else if (maxResultsObj instanceof String) {
+                try {
+                    maxResults = Integer.parseInt((String) maxResultsObj);
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().body("maxResults must be a number");
+                }
+            }
+        }
         
         if (query == null || query.isEmpty()) {
             return ResponseEntity.badRequest().body("Query parameter 'query' is required");
         }
         
+        try {
         List<Book> foundBooks = googleBooksService.searchAndConvert(query, maxResults);
+            
+            if (foundBooks.isEmpty()) {
+                return ResponseEntity.ok(Map.of(
+                    "message", "Nessun libro trovato che soddisfa i criteri (italiano, con descrizione e copertina)",
+                    "suggestion", "Prova con una query diversa o aumenta maxResults",
+                    "imported", 0,
+                    "totalFound", 0
+                ));
+            }
+            
         List<Book> savedBooks = new java.util.ArrayList<>();
-        List<String> skippedBooks = new java.util.ArrayList<>();
+            List<String> skippedBooks = new java.util.ArrayList<>();
         
         for (Book book : foundBooks) {
             try {
@@ -125,10 +178,17 @@ public class AdminController {
         return ResponseEntity.ok(Map.of(
             "imported", savedBooks.size(),
             "totalFound", foundBooks.size(),
-            "skipped", skippedBooks.size(),
-            "books", savedBooks,
-            "skippedBooks", skippedBooks
+                "skipped", skippedBooks.size(),
+                "books", savedBooks,
+                "skippedBooks", skippedBooks
         ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "Errore durante l'importazione",
+                "message", e.getMessage(),
+                "details", e.getClass().getSimpleName()
+            ));
+        }
     }
     
     /**
@@ -171,6 +231,28 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Errore nel salvataggio: " + e.getMessage());
         }
+    }
+
+    /**
+     * Ottiene tutte le recensioni (per admin)
+     * GET /admin/reviews
+     */
+    @GetMapping("/reviews")
+    public ResponseEntity<?> getAllReviews() {
+        return ResponseEntity.ok(reviewService.getAllReviews());
+    }
+
+    /**
+     * Elimina una recensione (per admin)
+     * DELETE /admin/reviews/{id}
+     */
+    @DeleteMapping("/reviews/{id}")
+    public ResponseEntity<?> deleteReview(@PathVariable Long id) {
+        reviewService.deleteReview(id);
+        return ResponseEntity.ok(Map.of(
+            "message", "Recensione eliminata con successo",
+            "deleted", true
+        ));
     }
 }
 

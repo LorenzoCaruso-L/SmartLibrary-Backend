@@ -110,11 +110,22 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationRepository.existsByUserIdAndBookIdAndCollectedTrue(userId, bookId);
     }
 
+    @Override
+    public boolean userHasReservedBook(Long bookId, Long userId) {
+        return reservationRepository.existsByUserIdAndBookId(userId, bookId);
+    }
+
     private ReservationDto toDto(Reservation reservation) {
+        Book book = reservation.getBook();
         return new ReservationDto(
                 reservation.getId(),
-                reservation.getBook().getId(),
-                reservation.getBook().getTitle(),
+                book.getId(),
+                book.getTitle(),
+                book.getAuthor(),
+                book.getPublicationYear(),
+                book.getGenre(),
+                book.getDescription(),
+                book.getCoverImageUrl(),
                 reservation.getReservationDate(),
                 reservation.isActive(),
                 reservation.isCollected()

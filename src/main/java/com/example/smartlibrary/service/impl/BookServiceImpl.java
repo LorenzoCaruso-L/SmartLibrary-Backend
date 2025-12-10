@@ -64,6 +64,11 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
+    @Override
     public BookResponse detailed(Long id) {
         return repository.findById(id)
                 .map(book -> bookFactory.toResponse(

@@ -32,6 +32,23 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.reviewsByBook(bookId));
     }
 
+    /**
+     * Verifica se l'utente può recensire un libro
+     * GET /reviews/book/{bookId}/can-review
+     */
+    @GetMapping("/book/{bookId}/can-review")
+    public ResponseEntity<?> canUserReview(@PathVariable Long bookId, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.ok(java.util.Map.of("canReview", false, "reason", "Not authenticated"));
+        }
+        boolean canReview = reviewService.canUserReview(bookId, principal.getName());
+        boolean hasReviewed = reviewService.hasUserReviewed(bookId, principal.getName());
+        return ResponseEntity.ok(java.util.Map.of(
+            "canReview", canReview,
+            "hasReviewed", hasReviewed
+        ));
+    }
+
     @DeleteMapping("/{reviewId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteReview(@PathVariable Long reviewId) {

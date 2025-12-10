@@ -33,9 +33,16 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/books/**", "/reviews/book/**").permitAll()
+                        .requestMatchers("/", "/auth/login", "/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll() // GET /api/books/** pubblico (include /api/books/{id}/reviews)
+                        .requestMatchers(HttpMethod.GET, "/reviews/book/*").permitAll() // GET /reviews/book/{id} pubblico
+                        .requestMatchers(HttpMethod.GET, "/reviews/book/*/can-review").authenticated() // GET /reviews/book/{id}/can-review richiede autenticazione
+                        .requestMatchers(HttpMethod.POST, "/api/books/*/reviews").authenticated() // POST /api/books/{id}/reviews richiede autenticazione
+                        .requestMatchers(HttpMethod.POST, "/reviews/*").authenticated() // POST /reviews/{bookId} richiede autenticazione
+                        .requestMatchers(HttpMethod.POST, "/reviews/**").authenticated() // POST /reviews/** richiede autenticazione
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/auth/me").authenticated() // /auth/me richiede autenticazione
+                        .requestMatchers(HttpMethod.DELETE, "/profile/**").authenticated() // DELETE su /profile/** richiede autenticazione
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

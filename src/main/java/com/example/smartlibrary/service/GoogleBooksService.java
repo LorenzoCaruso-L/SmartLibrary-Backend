@@ -23,7 +23,10 @@ public class GoogleBooksService {
      */
     public List<Book> searchAndConvert(String query, int maxResults) {
         try {
-            String url = GOOGLE_BOOKS_API + query.replace(" ", "+") + "&maxResults=" + maxResults;
+            // Aumenta maxResults per compensare i filtri (solo copertina obbligatoria)
+            int searchMaxResults = Math.min(maxResults * 2, 40); // Cerca 2x libri per compensare quelli senza copertina
+            String url = GOOGLE_BOOKS_API + query.replace(" ", "+") 
+                      + "&maxResults=" + searchMaxResults;
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             
             if (response == null || !response.containsKey("items")) {
@@ -36,6 +39,11 @@ public class GoogleBooksService {
             List<Book> books = new ArrayList<>();
             
             for (Map<String, Object> item : items) {
+                // Ferma se abbiamo raggiunto il numero richiesto
+                if (books.size() >= maxResults) {
+                    break;
+                }
+                
                 @SuppressWarnings("unchecked")
                 Map<String, Object> volumeInfo = (Map<String, Object>) item.get("volumeInfo");
                 
@@ -85,13 +93,14 @@ public class GoogleBooksService {
                 genre = categories.get(0);
             }
             
-            // Descrizione
+            // Descrizione (opzionale, ma se presente la tronchiamo se troppo lunga)
             String description = (String) volumeInfo.get("description");
             if (description != null && description.length() > 2000) {
                 description = description.substring(0, 1997) + "...";
             }
+            // Se non c'è descrizione, va bene lo stesso (non è obbligatoria)
             
-            // Copertina
+            // Copertina - OBBLIGATORIA
             String coverImageUrl = null;
             @SuppressWarnings("unchecked")
             Map<String, Object> imageLinks = (Map<String, Object>) volumeInfo.get("imageLinks");
@@ -103,6 +112,11 @@ public class GoogleBooksService {
                                                  .replace("&zoom=1", "&zoom=0")
                                                  .replace("zoom=1", "zoom=0");
                 }
+            }
+            
+            // Filtro: libro senza copertina viene scartato
+            if (coverImageUrl == null || coverImageUrl.trim().isEmpty()) {
+                return null;
             }
             
             Book book = new Book();

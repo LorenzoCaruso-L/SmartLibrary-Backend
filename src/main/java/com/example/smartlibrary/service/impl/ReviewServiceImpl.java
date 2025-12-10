@@ -1,6 +1,7 @@
 package com.example.smartlibrary.service.impl;
 
 import com.example.smartlibrary.dto.ReviewRequest;
+import com.example.smartlibrary.dto.ReviewResponse;
 import com.example.smartlibrary.model.Book;
 import com.example.smartlibrary.model.Review;
 import com.example.smartlibrary.model.User;
@@ -34,7 +35,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional
-    public Review addReview(Long bookId, String username, ReviewRequest request) {
+    public ReviewResponse addReview(Long bookId, String username, ReviewRequest request) {
         if (request.getRating() < 1 || request.getRating() > 5) {
             throw new IllegalArgumentException("Rating must be between 1 and 5");
         }
@@ -43,9 +44,10 @@ public class ReviewServiceImpl implements ReviewService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        boolean collected = reservationService.userHasCollectedBook(bookId, user.getId());
-        if (!collected) {
-            throw new IllegalStateException("Book must be collected before reviewing");
+        // Verifica che l'utente abbia prenotato il libro (non necessariamente raccolto)
+        boolean reserved = reservationService.userHasReservedBook(bookId, user.getId());
+        if (!reserved) {
+            throw new IllegalStateException("You must reserve the book before reviewing");
         }
 
         if (reviewRepository.existsByBookIdAndUserId(bookId, user.getId())) {
@@ -56,18 +58,70 @@ public class ReviewServiceImpl implements ReviewService {
         review.setUser(user);
         review.setBook(book);
         review.setRating(request.getRating());
-        review.setComment(request.getComment());
-        return reviewRepository.save(review);
+        review.setComment(request.getComment() != null ? request.getComment() : "");
+        Review saved = reviewRepository.save(review);
+        
+        return new ReviewResponse(
+            saved.getId(),
+            saved.getBook().getId(),
+            saved.getUser().getUsername(),
+            saved.getRating(),
+            saved.getComment()
+        );
     }
 
     @Override
-    public List<Review> reviewsByBook(Long bookId) {
-        return reviewRepository.findByBookId(bookId);
+    public List<ReviewResponse> reviewsByBook(Long bookId) {
+        return reviewRepository.findByBookId(bookId).stream()
+                .map(review -> new ReviewResponse(
+                    review.getId(),
+                    review.getBook().getId(),
+                    review.getUser().getUsername(),
+                    review.getRating(),
+                    review.getComment() != null ? review.getComment() : ""
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<ReviewResponse> getAllReviews() {
+        return reviewRepository.findAll().stream()
+                .map(review -> new ReviewResponse(
+                    review.getId(),
+                    review.getBook().getId(),
+                    review.getUser().getUsername(),
+                    review.getRating(),
+                    review.getComment() != null ? review.getComment() : ""
+                ))
+                .toList();
     }
 
     @Override
     public void deleteReview(Long reviewId) {
         reviewRepository.deleteById(reviewId);
+    }
+
+    @Override
+    public boolean canUserReview(Long bookId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElse(null);
+        if (user == null) return false;
+        
+        // Verifica che l'utente abbia prenotato il libro
+        boolean reserved = reservationService.userHasReservedBook(bookId, user.getId());
+        if (!reserved) return false;
+        
+        // Verifica che l'utente non abbia già recensito il libro
+        boolean alreadyReviewed = reviewRepository.existsByBookIdAndUserId(bookId, user.getId());
+        return !alreadyReviewed;
+    }
+
+    @Override
+    public boolean hasUserReviewed(Long bookId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElse(null);
+        if (user == null) return false;
+        return reviewRepository.existsByBookIdAndUserId(bookId, user.getId());
     }
 }
 

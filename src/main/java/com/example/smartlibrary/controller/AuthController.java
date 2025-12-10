@@ -2,6 +2,7 @@ package com.example.smartlibrary.controller;
 
 import com.example.smartlibrary.dto.AuthResponse;
 import com.example.smartlibrary.dto.LoginRequest;
+import com.example.smartlibrary.dto.RegisterRequest;
 import com.example.smartlibrary.dto.UserProfileDto;
 import com.example.smartlibrary.model.User;
 import com.example.smartlibrary.security.JwtService;
@@ -35,13 +36,42 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        if (user == null || user.getUsername() == null || user.getPassword() == null) {
-            return ResponseEntity.badRequest().body("username and password required");
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        // Validazione input
+        if (request == null) {
+            return ResponseEntity.badRequest().body("Request body required");
         }
-        if (userService.findByUsername(user.getUsername()) != null) {
-            return ResponseEntity.badRequest().body("username already taken");
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Username is required");
         }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Email is required");
+        }
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Password is required");
+        }
+        
+        // Validazione formato email base
+        if (!request.getEmail().contains("@")) {
+            return ResponseEntity.badRequest().body("Invalid email format");
+        }
+        
+        // Verifica username unico
+        if (userService.findByUsername(request.getUsername()) != null) {
+            return ResponseEntity.badRequest().body("Username already taken");
+        }
+        
+        // Verifica email unica
+        if (userService.findByEmail(request.getEmail()) != null) {
+            return ResponseEntity.badRequest().body("Email already registered");
+        }
+        
+        // Crea nuovo utente
+        User user = new User();
+        user.setUsername(request.getUsername().trim());
+        user.setEmail(request.getEmail().trim().toLowerCase());
+        user.setPassword(request.getPassword());
+        
         User saved = userService.register(user);
         // invio mail di benvenuto (best-effort, non blocca la risposta)
         notificationService.sendRegistrationWelcome(saved);
@@ -75,6 +105,12 @@ public class AuthController {
         if (user == null) {
             return ResponseEntity.status(404).body("user not found");
         }
-        return ResponseEntity.ok(new UserProfileDto(user.getId(), user.getUsername(), user.getEmail(), user.getRole()));
+        return ResponseEntity.ok(new UserProfileDto(
+                user.getId(), 
+                user.getUsername(), 
+                user.getEmail(), 
+                user.getRole(),
+                user.getProfileImageUrl()
+        ));
     }
 }

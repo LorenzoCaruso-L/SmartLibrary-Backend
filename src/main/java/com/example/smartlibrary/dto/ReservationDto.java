@@ -6,6 +6,11 @@ public class ReservationDto {
     private Long id;
     private Long bookId;
     private String bookTitle;
+    private String bookAuthor;
+    private Integer bookPublicationYear;
+    private String bookGenre;
+    private String bookDescription;
+    private String bookCoverImageUrl;
     private LocalDate reservationDate;
     private boolean active;
     private boolean collected;
@@ -14,6 +19,22 @@ public class ReservationDto {
         this.id = id;
         this.bookId = bookId;
         this.bookTitle = bookTitle;
+        this.reservationDate = reservationDate;
+        this.active = active;
+        this.collected = collected;
+    }
+
+    public ReservationDto(Long id, Long bookId, String bookTitle, String bookAuthor, Integer bookPublicationYear, 
+                         String bookGenre, String bookDescription, String bookCoverImageUrl, 
+                         LocalDate reservationDate, boolean active, boolean collected) {
+        this.id = id;
+        this.bookId = bookId;
+        this.bookTitle = bookTitle;
+        this.bookAuthor = bookAuthor;
+        this.bookPublicationYear = bookPublicationYear;
+        this.bookGenre = bookGenre;
+        this.bookDescription = bookDescription;
+        this.bookCoverImageUrl = bookCoverImageUrl;
         this.reservationDate = reservationDate;
         this.active = active;
         this.collected = collected;
@@ -65,6 +86,46 @@ public class ReservationDto {
 
     public void setCollected(boolean collected) {
         this.collected = collected;
+    }
+
+    public String getBookAuthor() {
+        return bookAuthor;
+    }
+
+    public void setBookAuthor(String bookAuthor) {
+        this.bookAuthor = bookAuthor;
+    }
+
+    public Integer getBookPublicationYear() {
+        return bookPublicationYear;
+    }
+
+    public void setBookPublicationYear(Integer bookPublicationYear) {
+        this.bookPublicationYear = bookPublicationYear;
+    }
+
+    public String getBookGenre() {
+        return bookGenre;
+    }
+
+    public void setBookGenre(String bookGenre) {
+        this.bookGenre = bookGenre;
+    }
+
+    public String getBookDescription() {
+        return bookDescription;
+    }
+
+    public void setBookDescription(String bookDescription) {
+        this.bookDescription = bookDescription;
+    }
+
+    public String getBookCoverImageUrl() {
+        return bookCoverImageUrl;
+    }
+
+    public void setBookCoverImageUrl(String bookCoverImageUrl) {
+        this.bookCoverImageUrl = bookCoverImageUrl;
     }
 }
 

@@ -11,4 +11,5 @@ public interface ReservationService {
     void cancelReservation(Long reservationId, String username);
     void markCollected(Long reservationId);
     boolean userHasCollectedBook(Long bookId, Long userId);
+    boolean userHasReservedBook(Long bookId, Long userId);
 }

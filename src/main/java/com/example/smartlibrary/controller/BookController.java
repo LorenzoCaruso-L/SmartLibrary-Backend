@@ -1,10 +1,13 @@
 package com.example.smartlibrary.controller;
 
 import com.example.smartlibrary.dto.BookResponse;
+import com.example.smartlibrary.dto.ReviewRequest;
 import com.example.smartlibrary.service.BookService;
+import com.example.smartlibrary.service.ReviewService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -13,9 +16,11 @@ import java.util.List;
 public class BookController {
 
     private final BookService service;
+    private final ReviewService reviewService;
 
-    public BookController(BookService service) {
+    public BookController(BookService service, ReviewService reviewService) {
         this.service = service;
+        this.reviewService = reviewService;
     }
 
     @GetMapping
@@ -34,6 +39,29 @@ public class BookController {
             return ResponseEntity.ok(service.detailed(id));
         } catch (RuntimeException ex) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Ottiene le recensioni di un libro
+     * GET /api/books/{id}/reviews
+     */
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<?> getBookReviews(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.reviewsByBook(id));
+    }
+
+    /**
+     * Aggiunge una recensione a un libro
+     * POST /api/books/{id}/reviews
+     */
+    @PostMapping("/{id}/reviews")
+    public ResponseEntity<?> addBookReview(@PathVariable Long id, @RequestBody ReviewRequest request, Principal principal) {
+        if (principal == null) return ResponseEntity.status(401).body("login required");
+        try {
+            return ResponseEntity.ok(reviewService.addReview(id, principal.getName(), request));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

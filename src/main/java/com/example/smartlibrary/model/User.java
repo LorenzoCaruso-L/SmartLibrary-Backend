@@ -11,7 +11,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -22,6 +22,9 @@ public class User {
 
     private boolean enabled = true;
     private boolean locked = false;
+
+    @Column(length = 1000000) // Base64 può essere lungo, max ~750KB per immagine
+    private String profileImageUrl; // Base64 encoded image data:url
 
     // getters & setters
     public Long getId() { return id; }
@@ -53,5 +56,13 @@ public class User {
 
     public void setLocked(boolean locked) {
         this.locked = locked;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }
