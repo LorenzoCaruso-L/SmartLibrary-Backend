@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/gestioneProfiloAdmin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
