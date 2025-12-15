@@ -49,7 +49,6 @@ public class Book {
         this.coverImageUrl = coverImageUrl;
     }
 
-    // GETTERS E SETTERS
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

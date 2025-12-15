@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/gestioneProfiloAdmin")
+@RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
@@ -32,10 +32,7 @@ public class AdminController {
         this.reviewService = reviewService;
     }
 
-    /**
-     * Ottiene tutti i libri del catalogo (per admin)
-     * GET /admin/books
-     */
+
     @GetMapping("/books")
     public ResponseEntity<?> getAllBooks(
             @RequestParam(required = false) String title,
@@ -61,11 +58,7 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Elimina tutti i libri dal database
-     * DELETE /admin/books
-     * ⚠️ ATTENZIONE: Operazione irreversibile!
-     */
+
     @DeleteMapping("/books")
     public ResponseEntity<?> deleteAllBooks() {
         long countBefore = bookService.search(null, null, null, null).size();
@@ -99,10 +92,7 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
     
-    /**
-     * Cerca libri su Google Books
-     * GET /admin/books/search?q=thriller&maxResults=10
-     */
+
     @GetMapping("/books/search")
     public ResponseEntity<?> searchGoogleBooks(
             @RequestParam String q,
@@ -111,15 +101,11 @@ public class AdminController {
         return ResponseEntity.ok(books);
     }
     
-    /**
-     * Importa libri da Google Books nel database
-     * POST /admin/books/import
-     * Body: { "query": "thriller", "maxResults": 20 }
-     */
+
     @PostMapping("/books/import")
     public ResponseEntity<?> importBooks(@RequestBody Map<String, Object> request) {
         String query = (String) request.get("query");
-        int maxResults = 10; // Default
+        int maxResults = 10;
         if (request.containsKey("maxResults")) {
             Object maxResultsObj = request.get("maxResults");
             if (maxResultsObj instanceof Number) {
@@ -154,7 +140,7 @@ public class AdminController {
         
         for (Book book : foundBooks) {
             try {
-                // Verifica se il libro esiste già (stesso titolo e autore)
+
                 List<com.example.smartlibrary.dto.BookResponse> existing = bookService.search(
                     book.getTitle(), book.getAuthor(), null, null);
                 
@@ -191,11 +177,7 @@ public class AdminController {
         }
     }
     
-    /**
-     * Importa un singolo libro da Google Books tramite ricerca e seleziona il primo risultato
-     * POST /admin/books/import/single
-     * Body: { "query": "Il nome della rosa Umberto Eco" }
-     */
+
     @PostMapping("/books/import/single")
     public ResponseEntity<?> importSingleBook(@RequestBody Map<String, Object> request) {
         String query = (String) request.get("query");
@@ -213,7 +195,6 @@ public class AdminController {
         Book book = foundBooks.get(0);
         
         try {
-            // Verifica se esiste già
             boolean exists = bookService.search(book.getTitle(), book.getAuthor(), null, null)
                 .stream()
                 .anyMatch(b -> b.getTitle().equalsIgnoreCase(book.getTitle()) 
@@ -233,19 +214,13 @@ public class AdminController {
         }
     }
 
-    /**
-     * Ottiene tutte le recensioni (per admin)
-     * GET /admin/reviews
-     */
+
     @GetMapping("/reviews")
     public ResponseEntity<?> getAllReviews() {
         return ResponseEntity.ok(reviewService.getAllReviews());
     }
 
-    /**
-     * Elimina una recensione (per admin)
-     * DELETE /admin/reviews/{id}
-     */
+
     @DeleteMapping("/reviews/{id}")
     public ResponseEntity<?> deleteReview(@PathVariable Long id) {
         reviewService.deleteReview(id);
@@ -253,6 +228,20 @@ public class AdminController {
             "message", "Recensione eliminata con successo",
             "deleted", true
         ));
+    }
+
+
+    @PostMapping("/reviews/generate-fake")
+    public ResponseEntity<?> generateFakeReviews(@RequestBody(required = false) Map<String, Object> request) {
+        int reviewsPerBook = 5;
+        if (request != null && request.containsKey("reviewsPerBook")) {
+            Object value = request.get("reviewsPerBook");
+            if (value instanceof Number) {
+                reviewsPerBook = ((Number) value).intValue();
+            }
+        }
+        
+        return ResponseEntity.ok(adminFacade.generateFakeReviews(reviewsPerBook));
     }
 }
 

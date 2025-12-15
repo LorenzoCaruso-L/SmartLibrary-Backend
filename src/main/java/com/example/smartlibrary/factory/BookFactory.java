@@ -34,10 +34,7 @@ public class BookFactory {
         return book;
     }
 
-    /**
-     * Crea una copia di un libro per evitare effetti collaterali
-     * quando riceviamo entità direttamente dal payload.
-     */
+
     public Book copyOf(Book source) {
         if (source == null) return null;
         return createBook(
@@ -51,9 +48,7 @@ public class BookFactory {
         );
     }
 
-    /**
-     * Applica i campi modificabili dal layer admin.
-     */
+
     public void applyEditableFields(Book source, Book target) {
         if (source == null || target == null) return;
         target.setTitle(source.getTitle());

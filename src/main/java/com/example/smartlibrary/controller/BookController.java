@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/books")
-@CrossOrigin("*") // permette il collegamento del frontend
+@CrossOrigin("*")
 public class BookController {
 
     private final BookService service;
@@ -42,19 +42,11 @@ public class BookController {
         }
     }
 
-    /**
-     * Ottiene le recensioni di un libro
-     * GET /api/books/{id}/reviews
-     */
     @GetMapping("/{id}/reviews")
     public ResponseEntity<?> getBookReviews(@PathVariable Long id) {
         return ResponseEntity.ok(reviewService.reviewsByBook(id));
     }
 
-    /**
-     * Aggiunge una recensione a un libro
-     * POST /api/books/{id}/reviews
-     */
     @PostMapping("/{id}/reviews")
     public ResponseEntity<?> addBookReview(@PathVariable Long id, @RequestBody ReviewRequest request, Principal principal) {
         if (principal == null) return ResponseEntity.status(401).body("login required");

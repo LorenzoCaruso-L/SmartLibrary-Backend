@@ -1,6 +1,7 @@
 package com.example.smartlibrary.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ReservationDto {
     private Long id;
@@ -14,6 +15,8 @@ public class ReservationDto {
     private LocalDate reservationDate;
     private boolean active;
     private boolean collected;
+    private LocalDateTime dueDate;
+    private boolean expired;
 
     public ReservationDto(Long id, Long bookId, String bookTitle, LocalDate reservationDate, boolean active, boolean collected) {
         this.id = id;
@@ -22,6 +25,8 @@ public class ReservationDto {
         this.reservationDate = reservationDate;
         this.active = active;
         this.collected = collected;
+        this.dueDate = null;
+        this.expired = false;
     }
 
     public ReservationDto(Long id, Long bookId, String bookTitle, String bookAuthor, Integer bookPublicationYear, 
@@ -38,6 +43,26 @@ public class ReservationDto {
         this.reservationDate = reservationDate;
         this.active = active;
         this.collected = collected;
+        this.dueDate = null;
+        this.expired = false;
+    }
+
+    public ReservationDto(Long id, Long bookId, String bookTitle, String bookAuthor, Integer bookPublicationYear, 
+                         String bookGenre, String bookDescription, String bookCoverImageUrl, 
+                         LocalDate reservationDate, boolean active, boolean collected, LocalDateTime dueDate) {
+        this.id = id;
+        this.bookId = bookId;
+        this.bookTitle = bookTitle;
+        this.bookAuthor = bookAuthor;
+        this.bookPublicationYear = bookPublicationYear;
+        this.bookGenre = bookGenre;
+        this.bookDescription = bookDescription;
+        this.bookCoverImageUrl = bookCoverImageUrl;
+        this.reservationDate = reservationDate;
+        this.active = active;
+        this.collected = collected;
+        this.dueDate = dueDate;
+        this.expired = collected && dueDate != null && dueDate.isBefore(LocalDateTime.now());
     }
 
     public Long getId() {
@@ -86,6 +111,7 @@ public class ReservationDto {
 
     public void setCollected(boolean collected) {
         this.collected = collected;
+        this.expired = collected && dueDate != null && dueDate.isBefore(LocalDateTime.now());
     }
 
     public String getBookAuthor() {
@@ -126,6 +152,23 @@ public class ReservationDto {
 
     public void setBookCoverImageUrl(String bookCoverImageUrl) {
         this.bookCoverImageUrl = bookCoverImageUrl;
+    }
+
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
+        this.expired = collected && dueDate != null && dueDate.isBefore(LocalDateTime.now());
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
     }
 }
 

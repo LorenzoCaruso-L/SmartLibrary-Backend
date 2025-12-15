@@ -34,15 +34,15 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/auth/login", "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll() // GET /api/books/** pubblico (include /api/books/{id}/reviews)
-                        .requestMatchers(HttpMethod.GET, "/reviews/book/*").permitAll() // GET /reviews/book/{id} pubblico
-                        .requestMatchers(HttpMethod.GET, "/reviews/book/*/can-review").authenticated() // GET /reviews/book/{id}/can-review richiede autenticazione
-                        .requestMatchers(HttpMethod.POST, "/api/books/*/reviews").authenticated() // POST /api/books/{id}/reviews richiede autenticazione
-                        .requestMatchers(HttpMethod.POST, "/reviews/*").authenticated() // POST /reviews/{bookId} richiede autenticazione
-                        .requestMatchers(HttpMethod.POST, "/reviews/**").authenticated() // POST /reviews/** richiede autenticazione
+                        .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/reviews/book/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/reviews/book/*/can-review").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/books/*/reviews").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/reviews/*").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/reviews/**").authenticated()
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/auth/me").authenticated() // /auth/me richiede autenticazione
-                        .requestMatchers(HttpMethod.DELETE, "/profile/**").authenticated() // DELETE su /profile/** richiede autenticazione
+                        .requestMatchers("/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/profile/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -63,7 +63,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permetti tutte le origini per lo sviluppo (puoi restringere in produzione)
         configuration.addAllowedOriginPattern("*");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");

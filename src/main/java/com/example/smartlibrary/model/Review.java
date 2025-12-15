@@ -18,7 +18,6 @@ public class Review {
     @Column(length = 1000)
     private String comment;
 
-    // getters & setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

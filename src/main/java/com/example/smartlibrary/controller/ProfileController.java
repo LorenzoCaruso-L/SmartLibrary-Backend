@@ -58,11 +58,7 @@ public class ProfileController {
         return ResponseEntity.ok(reservationService.reservationsForUser(principal.getName()));
     }
 
-    /**
-     * Elimina l'account dell'utente corrente
-     * DELETE /profile/account o DELETE /profile/delete
-     * Elimina anche tutte le prenotazioni e recensioni associate
-     */
+
     @DeleteMapping({"/account", "/delete"})
     public ResponseEntity<?> deleteAccount(Principal principal) {
         if (principal == null) return ResponseEntity.status(401).body("login required");

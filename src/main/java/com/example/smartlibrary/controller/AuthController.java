@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -37,63 +38,68 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        // Validazione input
         if (request == null) {
-            return ResponseEntity.badRequest().body("Request body required");
+            return ResponseEntity.badRequest().body(Map.of("error", "Request body required"));
         }
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Username is required");
+            return ResponseEntity.badRequest().body(Map.of("error", "Username richiesto"));
         }
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Email is required");
+            return ResponseEntity.badRequest().body(Map.of("error", "Email richiesta"));
         }
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Password is required");
+            return ResponseEntity.badRequest().body(Map.of("error", "Password richiesta"));
         }
         
-        // Validazione formato email base
-        if (!request.getEmail().contains("@")) {
-            return ResponseEntity.badRequest().body("Invalid email format");
+        String email = request.getEmail().trim().toLowerCase();
+        if (!email.contains("@") || !email.contains(".")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Formato email non valido"));
         }
         
-        // Verifica username unico
-        if (userService.findByUsername(request.getUsername()) != null) {
-            return ResponseEntity.badRequest().body("Username already taken");
+        if (userService.existsByUsername(request.getUsername().trim())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Username già esistente"));
         }
         
-        // Verifica email unica
-        if (userService.findByEmail(request.getEmail()) != null) {
-            return ResponseEntity.badRequest().body("Email already registered");
+        if (userService.existsByEmail(email)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email già registrata"));
         }
         
-        // Crea nuovo utente
         User user = new User();
         user.setUsername(request.getUsername().trim());
-        user.setEmail(request.getEmail().trim().toLowerCase());
+        user.setEmail(email);
         user.setPassword(request.getPassword());
         
-        User saved = userService.register(user);
-        // invio mail di benvenuto (best-effort, non blocca la risposta)
-        notificationService.sendRegistrationWelcome(saved);
-        saved.setPassword(null);
-        return ResponseEntity.ok(saved);
+        try {
+            User saved = userService.register(user);
+            notificationService.sendRegistrationWelcome(saved);
+            saved.setPassword(null);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Errore durante la registrazione: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         if (request == null || request.getUsername() == null || request.getPassword() == null) {
-            return ResponseEntity.badRequest().body("username and password required");
+            return ResponseEntity.badRequest().body(Map.of("error", "Username e password richiesti"));
         }
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
 
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
-        User user = userService.findByUsername(principal.getUsername());
-        String token = jwtService.generateToken(principal);
+            UserDetails principal = (UserDetails) authentication.getPrincipal();
+            User user = userService.findByUsername(principal.getUsername());
+            String token = jwtService.generateToken(principal);
 
-        return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getRole()));
+            return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getRole()));
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Credenziali non valide"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Errore durante il login: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/me")

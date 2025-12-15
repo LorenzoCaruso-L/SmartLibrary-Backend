@@ -13,7 +13,7 @@ public class ReservationController {
     public ReservationController(ReservationService reservationService) {
         this.reservationService = reservationService;
     }
-    // ciao
+
     @PostMapping("/{bookId}")
     public ResponseEntity<?> reserve(@PathVariable Long bookId, Principal principal) {
         if (principal == null) return ResponseEntity.status(401).body("login required");

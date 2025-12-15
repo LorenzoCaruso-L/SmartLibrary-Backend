@@ -32,10 +32,6 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.reviewsByBook(bookId));
     }
 
-    /**
-     * Verifica se l'utente può recensire un libro
-     * GET /reviews/book/{bookId}/can-review
-     */
     @GetMapping("/book/{bookId}/can-review")
     public ResponseEntity<?> canUserReview(@PathVariable Long bookId, Principal principal) {
         if (principal == null) {

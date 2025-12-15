@@ -44,7 +44,6 @@ public class ReviewServiceImpl implements ReviewService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        // Verifica che l'utente abbia prenotato il libro (non necessariamente raccolto)
         boolean reserved = reservationService.userHasReservedBook(bookId, user.getId());
         if (!reserved) {
             throw new IllegalStateException("You must reserve the book before reviewing");
@@ -107,11 +106,9 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElse(null);
         if (user == null) return false;
         
-        // Verifica che l'utente abbia prenotato il libro
         boolean reserved = reservationService.userHasReservedBook(bookId, user.getId());
         if (!reserved) return false;
         
-        // Verifica che l'utente non abbia già recensito il libro
         boolean alreadyReviewed = reviewRepository.existsByBookIdAndUserId(bookId, user.getId());
         return !alreadyReviewed;
     }

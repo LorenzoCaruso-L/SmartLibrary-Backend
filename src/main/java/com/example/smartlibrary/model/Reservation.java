@@ -2,6 +2,7 @@ package com.example.smartlibrary.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class Reservation {
@@ -19,8 +20,11 @@ public class Reservation {
     private boolean active = true;
     private boolean collected = false;
     private String pickupCode;
+    private LocalDateTime collectedDate;
+    private LocalDateTime dueDate;
+    private boolean reminderSent = false;
+    private boolean expiredSent = false;
 
-    // getters & setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -50,5 +54,37 @@ public class Reservation {
 
     public void setPickupCode(String pickupCode) {
         this.pickupCode = pickupCode;
+    }
+
+    public LocalDateTime getCollectedDate() {
+        return collectedDate;
+    }
+
+    public void setCollectedDate(LocalDateTime collectedDate) {
+        this.collectedDate = collectedDate;
+    }
+
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public boolean isReminderSent() {
+        return reminderSent;
+    }
+
+    public void setReminderSent(boolean reminderSent) {
+        this.reminderSent = reminderSent;
+    }
+
+    public boolean isExpiredSent() {
+        return expiredSent;
+    }
+
+    public void setExpiredSent(boolean expiredSent) {
+        this.expiredSent = expiredSent;
     }
 }

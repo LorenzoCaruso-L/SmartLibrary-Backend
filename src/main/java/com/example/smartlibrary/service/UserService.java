@@ -6,6 +6,8 @@ public interface UserService {
     User register(User user);
     User findByUsername(String username);
     User findByEmail(String email);
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
     void suspendUser(Long userId);
     void enableUser(Long userId);
     User updateProfileImage(String username, String profileImageUrl);

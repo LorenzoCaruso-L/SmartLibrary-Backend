@@ -18,12 +18,9 @@ public class GoogleBooksService {
         this.restTemplate = new RestTemplate();
     }
     
-    /**
-     * Cerca libri su Google Books e restituisce una lista di Book pronti per essere salvati
-     */
+
     public List<Book> searchAndConvert(String query, int maxResults) {
         try {
-            // Aumenta maxResults per compensare i filtri (solo copertina obbligatoria)
             int searchMaxResults = Math.min(maxResults * 2, 40); // Cerca 2x libri per compensare quelli senza copertina
             String url = GOOGLE_BOOKS_API + query.replace(" ", "+") 
                       + "&maxResults=" + searchMaxResults;
@@ -39,7 +36,6 @@ public class GoogleBooksService {
             List<Book> books = new ArrayList<>();
             
             for (Map<String, Object> item : items) {
-                // Ferma se abbiamo raggiunto il numero richiesto
                 if (books.size() >= maxResults) {
                     break;
                 }
@@ -72,7 +68,6 @@ public class GoogleBooksService {
             List<String> authors = (List<String>) volumeInfo.get("authors");
             String author = (authors != null && !authors.isEmpty()) ? authors.get(0) : "Autore sconosciuto";
             
-            // Anno di pubblicazione
             Integer year = null;
             if (volumeInfo.containsKey("publishedDate")) {
                 String publishedDate = (String) volumeInfo.get("publishedDate");
@@ -80,12 +75,10 @@ public class GoogleBooksService {
                     try {
                         year = Integer.parseInt(publishedDate.substring(0, 4));
                     } catch (NumberFormatException e) {
-                        // Ignora se non è un numero valido
                     }
                 }
             }
             
-            // Genere (categorie)
             String genre = "Generale";
             @SuppressWarnings("unchecked")
             List<String> categories = (List<String>) volumeInfo.get("categories");
@@ -93,28 +86,23 @@ public class GoogleBooksService {
                 genre = categories.get(0);
             }
             
-            // Descrizione (opzionale, ma se presente la tronchiamo se troppo lunga)
             String description = (String) volumeInfo.get("description");
             if (description != null && description.length() > 2000) {
                 description = description.substring(0, 1997) + "...";
             }
-            // Se non c'è descrizione, va bene lo stesso (non è obbligatoria)
-            
-            // Copertina - OBBLIGATORIA
+
             String coverImageUrl = null;
             @SuppressWarnings("unchecked")
             Map<String, Object> imageLinks = (Map<String, Object>) volumeInfo.get("imageLinks");
             if (imageLinks != null) {
                 coverImageUrl = (String) imageLinks.get("thumbnail");
                 if (coverImageUrl != null) {
-                    // Sostituisce http con https e aumenta la risoluzione
                     coverImageUrl = coverImageUrl.replace("http://", "https://")
                                                  .replace("&zoom=1", "&zoom=0")
                                                  .replace("zoom=1", "zoom=0");
                 }
             }
             
-            // Filtro: libro senza copertina viene scartato
             if (coverImageUrl == null || coverImageUrl.trim().isEmpty()) {
                 return null;
             }
@@ -124,7 +112,7 @@ public class GoogleBooksService {
             book.setAuthor(author);
             book.setPublicationYear(year);
             book.setGenre(genre);
-            book.setCopiesAvailable(10); // Default: 10 copie disponibili
+            book.setCopiesAvailable(10);
             book.setDescription(description);
             book.setCoverImageUrl(coverImageUrl);
             

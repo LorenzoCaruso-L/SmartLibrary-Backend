@@ -17,16 +17,14 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    // ROLE_USER or ROLE_ADMIN
     private String role = "ROLE_USER";
 
     private boolean enabled = true;
     private boolean locked = false;
 
-    @Column(length = 1000000) // Base64 può essere lungo, max ~750KB per immagine
-    private String profileImageUrl; // Base64 encoded image data:url
+    @Column(length = 1000000)
+    private String profileImageUrl;
 
-    // getters & setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

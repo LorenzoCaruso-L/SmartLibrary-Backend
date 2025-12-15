@@ -13,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,17 +42,28 @@ public class ReservationServiceImpl implements ReservationService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        if (book.getCopiesAvailable() <= 0) {
-            throw new Exception("No copies available");
-        }
-
         boolean already = reservationRepository.existsByUserIdAndBookId(user.getId(), book.getId());
-        if (already) throw new Exception("You already reserved this book");
+        if (already) throw new Exception("Hai già prenotato questo libro");
+
+        if (book.getCopiesAvailable() <= 0) {
+            boolean alreadyCollectedBySomeone = reservationRepository.existsByBookIdAndCollectedTrue(book.getId());
+            if (alreadyCollectedBySomeone) {
+                throw new Exception("Questo libro è già stato prenotato e ritirato da un altro utente. Non può essere riprenotato finché non viene restituito.");
+            } else {
+                throw new Exception("No copies available");
+            }
+        }
 
         Reservation r = new Reservation();
         r.setBook(book);
         r.setUser(user);
         r.setPickupCode(UUID.randomUUID().toString().substring(0, 8));
+        r.setCollected(true);
+        LocalDateTime now = LocalDateTime.now();
+        r.setCollectedDate(now);
+        LocalDateTime dueDate = now.plusMonths(1);
+        r.setDueDate(dueDate);
+        
         reservationRepository.save(r);
 
         book.setCopiesAvailable(book.getCopiesAvailable() - 1);
@@ -101,7 +113,19 @@ public class ReservationServiceImpl implements ReservationService {
     public void markCollected(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
+        
+        if (reservation.isCollected()) {
+            return;
+        }
+        
         reservation.setCollected(true);
+        LocalDateTime now = LocalDateTime.now();
+        reservation.setCollectedDate(now);
+        
+        if (reservation.getDueDate() == null) {
+            reservation.setDueDate(now.plusMonths(1));
+        }
+        
         reservationRepository.save(reservation);
     }
 
@@ -128,7 +152,8 @@ public class ReservationServiceImpl implements ReservationService {
                 book.getCoverImageUrl(),
                 reservation.getReservationDate(),
                 reservation.isActive(),
-                reservation.isCollected()
+                reservation.isCollected(),
+                reservation.getDueDate()
         );
     }
 }
